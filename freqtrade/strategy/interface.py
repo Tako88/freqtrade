@@ -581,6 +581,15 @@ class IStrategy(ABC, HyperStrategyMixin):
         """
         return 1.0
 
+    def indicator_filter(self, dataframe: DataFrame) -> bool:
+        """
+        Method to define logic for the IndicatorFilter pairlist handler. Return True
+        to keep the pair in the whitelist, False to remove it.
+
+        :param dataframe: Strategy Dataframe
+        """
+        return True
+
     def informative_pairs(self) -> ListPairsWithTimeframes:
         """
         Define additional, informative pair/interval combinations to be cached from the exchange.
