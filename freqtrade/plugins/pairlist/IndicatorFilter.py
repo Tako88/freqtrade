@@ -149,9 +149,6 @@ class IndicatorFilter(IPairList):
 
             if strategy_safe_wrapper(self._strategy.indicator_filter)(dataframe):
                 pairs.append(p["symbol"])
-            else:
-                logger.info(
-                    f"{p['symbol']} doesn't satisfy defined condition, removing from whitelist."
-                )
 
+        logger.info(f"{len(pairs)}/{len(pairlist)} pairs matched IndicatorFilter condition")
         return pairs
