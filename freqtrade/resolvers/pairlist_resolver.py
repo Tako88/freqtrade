@@ -46,7 +46,6 @@ class PairListResolver(IResolver):
         return PairListResolver.load_object(
             pairlist_name,
             config,
-            extra_dir=f"{config['user_data_dir']}/{USERPATH_PLUGINS}/pairlist",
             kwargs={
                 "exchange": exchange,
                 "pairlistmanager": pairlistmanager,
