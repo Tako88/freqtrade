@@ -77,6 +77,7 @@ USERPATH_HYPEROPTS = "hyperopts"
 USERPATH_STRATEGIES = "strategies"
 USERPATH_NOTEBOOKS = "notebooks"
 USERPATH_FREQAIMODELS = "freqaimodels"
+USERPATH_PLUGINS = "plugins"
 
 TELEGRAM_SETTING_OPTIONS = ["on", "off", "silent"]
 WEBHOOK_FORMAT_OPTIONS = ["form", "json", "raw"]
@@ -317,7 +318,7 @@ CONF_SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "method": {"type": "string", "enum": AVAILABLE_PAIRLISTS},
+                    "method": {"type": "string"},
                 },
                 "required": ["method"],
             },

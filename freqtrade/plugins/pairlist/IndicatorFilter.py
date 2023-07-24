@@ -1,31 +1,25 @@
 """
-Volume PairList provider
-
-Provides dynamic pair list based on trade volumes
+Indicator PairList filter
 """
 import logging
+from abc import ABC, abstractmethod
 from datetime import timedelta
 from typing import Any, Dict, List
 
 from cachetools import TTLCache
+from pandas import DataFrame
 
 from freqtrade.constants import Config, ListPairsWithTimeframes
 from freqtrade.exceptions import OperationalException
 from freqtrade.exchange import timeframe_to_minutes, timeframe_to_prev_date, timeframe_to_seconds
 from freqtrade.plugins.pairlist.IPairList import IPairList, PairlistParameter
-from freqtrade.resolvers.strategy_resolver import StrategyResolver
-from freqtrade.strategy.interface import IStrategy
-from freqtrade.strategy.strategy_wrapper import strategy_safe_wrapper
 from freqtrade.util import dt_now
 
 
 logger = logging.getLogger(__name__)
 
 
-SORT_VALUES = ["quoteVolume"]
-
-
-class IndicatorFilter(IPairList):
+class IndicatorFilter(IPairList, ABC):
     def __init__(
         self,
         exchange,
@@ -36,7 +30,6 @@ class IndicatorFilter(IPairList):
     ) -> None:
         super().__init__(exchange, pairlistmanager, config, pairlistconfig, pairlist_pos)
 
-        self._strategy_name = self._pairlistconfig.get("strategy_name", "")
         self._lookback_timeframe = self._pairlistconfig.get("lookback_timeframe", "1d")
         self._lookback_period = self._pairlistconfig.get("lookback_period", 0)
 
@@ -57,10 +50,6 @@ class IndicatorFilter(IPairList):
                 "IndicatorFilter requires lookback_period to not "
                 f"exceed exchange max request size ({candle_limit})"
             )
-        if self._strategy_name == "":
-            raise OperationalException("IndicatorFilter requires a strategy to function")
-
-        self._strategy: IStrategy = StrategyResolver._load_strategy(self._strategy_name, config)
 
     @property
     def needstickers(self) -> bool:
@@ -75,21 +64,15 @@ class IndicatorFilter(IPairList):
         """
         Short whitelist method description - used for startup-messages
         """
-        return f"{self.name} - filtering pairs by condition from indicator_filter strategy callback"
+        return f"{self.name} - filtering pairs by condition from filter_pairlist method"
 
     @staticmethod
     def description() -> str:
-        return "Filter pairs by condition from indicator_filter strategy callback"
+        return "Filter pairs by condition from filter_pairs method"
 
     @staticmethod
     def available_parameters() -> Dict[str, PairlistParameter]:
         return {
-            "strategy_name": {
-                "type": "string",
-                "default": "",
-                "description": "Strategy",
-                "help": "Strategy to use for the desired callback function",
-            },
             "lookback_timeframe": {
                 "type": "string",
                 "default": "",
@@ -105,12 +88,6 @@ class IndicatorFilter(IPairList):
         }
 
     def filter_pairlist(self, pairlist: List[str], tickers: Dict) -> List[str]:
-        """
-        Validate trading range
-        :param pairlist: pairlist to filter or sort
-        :param tickers: Tickers (from exchange.get_tickers). May be cached.
-        :return: new allowlist
-        """
         filtered_tickers: List[Dict[str, Any]] = [{"symbol": k} for k in pairlist]
         pairs: List[str] = []
         since_ms = (
@@ -147,8 +124,12 @@ class IndicatorFilter(IPairList):
             if dataframe is None:
                 continue
 
-            if strategy_safe_wrapper(self._strategy.indicator_filter)(dataframe):
+            if self.filter_dataframe(dataframe=dataframe):
                 pairs.append(p["symbol"])
 
         logger.info(f"{len(pairs)}/{len(pairlist)} pairs matched IndicatorFilter condition")
         return pairs
+
+    @abstractmethod
+    def filter_dataframe(self, dataframe: DataFrame) -> bool:
+        pass
