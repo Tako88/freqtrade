@@ -1349,3 +1349,13 @@ class RPC:
 
     def _get_market_direction(self) -> MarketDirection:
         return self._freqtrade.strategy.market_direction
+
+    def _rpc_get_ticker(self, pair: str):
+        ticker = self._freqtrade.dataprovider.ticker(pair)
+        return {
+            'symbol': ticker['symbol'],
+            'timestamp': ticker['timestamp'],
+            'high': str(ticker['high']),
+            'low': str(ticker['low']),
+            'open': str(ticker['open']),
+            'last': str(ticker['last'])} if ticker else {}

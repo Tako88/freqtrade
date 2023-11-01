@@ -542,3 +542,12 @@ class SysInfo(BaseModel):
 class Health(BaseModel):
     last_process: Optional[datetime] = None
     last_process_ts: Optional[int] = None
+
+
+class TickerResponse(BaseModel):
+    symbol: str
+    timestamp: int
+    high: str
+    low: str
+    open: str
+    last: str
