@@ -19,8 +19,8 @@ from freqtrade.rpc.api_server.api_schemas import (AvailablePairs, Balances, Blac
                                                   OpenTradeSchema, PairHistory, PerformanceEntry,
                                                   Ping, PlotConfig, Profit, ResultMsg, ShowConfig,
                                                   Stats, StatusMsg, StrategyListResponse,
-                                                  StrategyResponse, SysInfo, Version,
-                                                  WhitelistResponse)
+                                                  StrategyResponse, SysInfo, TickerResponse,
+                                                  Version, WhitelistResponse)
 from freqtrade.rpc.api_server.deps import get_config, get_exchange, get_rpc, get_rpc_optional
 from freqtrade.rpc.rpc import RPCException
 
@@ -394,3 +394,12 @@ def sysinfo():
 @router.get('/health', response_model=Health, tags=['info'])
 def health(rpc: RPC = Depends(get_rpc)):
     return rpc.health()
+
+
+@router.get("/ticker", response_model=TickerResponse)
+def current_rate(pair: str, rpc: RPC = Depends(get_rpc)):
+    ticker = rpc._rpc_get_ticker(pair=pair)
+    if ticker:
+        return ticker
+
+    raise HTTPException(status_code=400, detail='Requested pair not available')
